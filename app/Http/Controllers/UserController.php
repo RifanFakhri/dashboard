@@ -10,22 +10,21 @@ use Illuminate\Validation\Rule;       // <-- Import Rule
 class UserController extends Controller
 {
     /**
-     * Menampilkan halaman daftar pengguna.
+     * Menampilkan halaman daftar pengguna (KHUSUS ROLE USER).
      */
     public function index()
     {
-        // Ambil semua user, urutkan berdasarkan nama
-        // Kita tetap select() agar password tidak ikut terambil ke controller
+        // --- PERUBAHAN: Filter hanya role 'user' ---
         $users = User::select('id', 'username', 'nama_lengkap', 'no_wa', 'role')
+                     ->where('role', 'user') // <--- Hanya tampilkan user biasa
                      ->orderBy('nama_lengkap')
                      ->get();
 
-        // Menggunakan nama view dari file pertama Anda
         return view('pages.data-user', compact('users')); 
     }
 
     /**
-     * Menyimpan pengguna baru.
+     * Menyimpan pengguna baru (OTOMATIS JADI USER).
      */
     public function store(Request $request)
     {
@@ -33,11 +32,14 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users',
             'nama_lengkap' => 'required|string|max:255',
             'no_wa' => 'required|string|max:20',
-            'role' => ['required', Rule::in(['admin', 'user'])],
-            'password' => 'required|string|min:8|confirmed', // 'confirmed' akan cek 'password_confirmation'
+            // Role kita hapus dari validasi input, karena kita set otomatis di bawah
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // HASH PASSWORD sebelum disimpan
+        // --- PERUBAHAN: Set role otomatis jadi 'user' ---
+        $validatedData['role'] = 'user';
+
+        // Hash Password
         $validatedData['password'] = Hash::make($validatedData['password']);
 
         User::create($validatedData);
@@ -50,29 +52,34 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        // Keamanan: Pastikan yang diedit adalah role 'user' (bukan admin)
+        if ($user->role !== 'user') {
+            return redirect()->route('pages.data-user')
+                ->withErrors(['error' => 'Anda hanya dapat mengedit data User di halaman ini.']);
+        }
+
         $validatedData = $request->validate([
             'username' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('users')->ignore($user->id), // Abaikan unique check untuk user ini
+                Rule::unique('users')->ignore($user->id),
             ],
             'nama_lengkap' => 'required|string|max:255',
             'no_wa' => 'required|string|max:20',
-            'role' => ['required', Rule::in(['admin', 'user'])],
-            'password' => 'nullable|string|min:8|confirmed', // Password boleh kosong (nullable)
+            // Role tidak diizinkan diubah lewat form ini
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         // --- Logika Update Password ---
-        // 1. Cek jika field password diisi
         if ($request->filled('password')) {
-            // 2. Jika diisi, hash password baru
             $validatedData['password'] = Hash::make($validatedData['password']);
         } else {
-            // 3. Jika kosong, hapus 'password' dari array agar tidak meng-update password lama
             unset($validatedData['password']);
         }
-        // ------------------------------
+
+        // Pastikan role tidak berubah (tetap user)
+        unset($validatedData['role']);
 
         $user->update($validatedData);
 
@@ -84,11 +91,18 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        // Opsi: Tambahkan logika untuk mencegah user menghapus diri sendiri
+        // Keamanan: Pastikan yang dihapus adalah role 'user'
+        if ($user->role !== 'user') {
+            return redirect()->route('pages.data-user')
+                ->withErrors(['error' => 'Anda hanya dapat menghapus data User di halaman ini.']);
+        }
+        
+        // Cek agar user tidak bisa hapus diri sendiri (jika diperlukan)
         if (auth()->id() == $user->id) {
-            return redirect()->route('users.index')
+             return redirect()->route('pages.data-user')
                 ->withErrors(['error' => 'Gagal! Anda tidak dapat menghapus akun Anda sendiri.']);
         }
+
 
         $user->delete();
         

@@ -46,7 +46,7 @@ class AdminController extends Controller
         User::create($validatedData);
 
         // Redirect ke route 'admins.index'
-        return redirect()->route('admins.index')->with('success', 'Admin baru berhasil ditambahkan.');
+        return redirect()->route('pages.data-admin')->with('success', 'Admin baru berhasil ditambahkan.');
     }
 
     /**
@@ -57,7 +57,7 @@ class AdminController extends Controller
     {
         // Pastikan user yang di-edit adalah admin
         if ($admin->role !== 'admin') {
-            return redirect()->route('admins.index')->withErrors(['error' => 'User ini bukan admin.']);
+            return redirect()->route('pages.data-admin')->withErrors(['error' => 'User ini bukan admin.']);
         }
 
         $validatedData = $request->validate([
@@ -83,7 +83,7 @@ class AdminController extends Controller
 
         $admin->update($validatedData);
 
-        return redirect()->route('admins.index')->with('success', 'Data admin berhasil diperbarui.');
+        return redirect()->route('pages.data-admin')->with('success', 'Data admin berhasil diperbarui.');
     }
 
     /**
@@ -93,17 +93,17 @@ class AdminController extends Controller
     {
         // Pastikan user yang dihapus adalah admin
         if ($admin->role !== 'admin') {
-            return redirect()->route('admins.index')->withErrors(['error' => 'User ini bukan admin.']);
+            return redirect()->route('pages.data-admin')->withErrors(['error' => 'User ini bukan admin.']);
         }
 
         // Mencegah admin menghapus diri sendiri
         if (auth()->id() == $admin->id) {
-            return redirect()->route('admins.index')
+            return redirect()->route('pages.data-admin')
                 ->withErrors(['error' => 'Gagal! Anda tidak dapat menghapus akun Anda sendiri.']);
         }
 
         $admin->delete();
         
-        return redirect()->route('admins.index')->with('success', 'Data admin berhasil dihapus.');
+        return redirect()->route('pages.data-admin')->with('success', 'Data admin berhasil dihapus.');
     }
 }

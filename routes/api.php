@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Models\User; // <-- TAMBAHKAN IMPORT User
+use App\Http\Controllers\MidtransController;
 
 Route::prefix('dolanbanyumas')->group(function () {
 
@@ -31,4 +32,9 @@ Route::prefix('dolanbanyumas')->group(function () {
         return response()->json($users);
     });
 
+    // MIDTRANS TRANSACTION
+    Route::post('/midtrans/transaction', [MidtransController::class, 'createTransaction']);
+
+    // MIDTRANS NOTIFICATION
+    Route::post('/midtrans/notification', [MidtransController::class, 'notificationHandler']);
 });
