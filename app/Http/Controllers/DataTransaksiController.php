@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction; // <-- SESUAIKAN: Ganti jika nama model Anda berbeda
+use App\Models\Transaction; // Pastikan ini model Transaksi Anda
+use App\Models\User; // Pastikan ini model User Anda
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -13,56 +14,62 @@ class DataTransaksiController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Transaksi::query(); // Gunakan model Transaksi Anda
+        // --- PERUBAHAN: Kita HANYA load relasi 'user' ---
+        $query = Transaction::with('user'); // Asumsi relasi user() ada di model Transaction
 
-        // --- Logika Search ---
-        // SESUAIKAN: Ganti 'kode_transaksi' dan 'nama_pelanggan' dengan kolom yang ingin Anda cari
+        // --- Logika Search (Termasuk relasi) ---
         if ($request->filled('search')) {
             $search = $request->input('search');
+            
             $query->where(function($q) use ($search) {
-                $q->where('kode_transaksi', 'like', '%' . $search . '%')
-                  ->orWhere('nama_pelanggan', 'like', '%' . $search . '%');
+                // Cari di tabel transactions (order_id DAN wisata_name)
+                $q->where('order_id', 'like', '%' . $search . '%')
+                  ->orWhere('wisata_name', 'like', '%' . $search . '%'); // <-- PERUBAHAN DI SINI
+                  
+                // Cari di relasi user (user_name)
+                $q->orWhereHas('user', function($userQuery) use ($search) {
+                    // SESUAIKAN: 'name' dengan kolom nama di tabel users
+                    $userQuery->where('name', 'like', '%' . $search . '%');
+                });
             });
         }
 
         // --- Pagination ---
-        // Ambil data, urutkan (misal: terbaru dulu), dan paginasi 6 per halaman
-        $transaksis = $query->orderBy('created_at', 'desc')
-                            ->paginate(6)
-                            ->withQueryString(); // Agar pagination tetap membawa query search
+        $transactions = $query->orderBy('created_at', 'desc')
+                              ->paginate(6)
+                              ->withQueryString(); 
 
-        return view('pages.data-transaksi', compact('transaksis')); // Kirim data ke view
+        return view('pages.data-transaksi', compact('transactions'));
     }
 
     /**
      * Mengupdate data transaksi.
-     * (Asumsi menggunakan Route-Model Binding)
      */
-    public function update(Request $request, Transaksi $transaksi)
+    public function update(Request $request, Transaction $transaction) 
     {
-        // --- Validasi Data ---
-        // SESUAIKAN: Ganti dengan kolom dan aturan validasi Anda
+        // Validasi ini masih sama, karena 'wisata_name' mungkin tidak untuk diedit
         $validatedData = $request->validate([
-            'nama_pelanggan' => 'required|string|max:255',
-            'total' => 'required|numeric|min:0',
+            'visit_date' => 'required|date',
+            'total_tickets' => 'required|integer|min:1',
             'status' => [
                 'required',
-                Rule::in(['pending', 'sukses', 'batal']), // Contoh validasi status
+                Rule::in(['pending', 'sukses', 'batal']), 
             ],
+            // Jika wisata_name juga BISA diedit, tambahkan di sini:
+            // 'wisata_name' => 'required|string|max:255',
         ]);
 
-        $transaksi->update($validatedData);
+        $transaction->update($validatedData);
 
         return redirect()->route('transaksi.index')->with('success', 'Data transaksi berhasil diperbarui.');
     }
 
     /**
      * Menghapus data transaksi.
-     * (Asumsi menggunakan Route-Model Binding)
      */
-    public function destroy(Transaksi $transaksi)
+    public function destroy(Transaction $transaction)
     {
-        $transaksi->delete();
+        $transaction->delete();
 
         return redirect()->route('transaksi.index')->with('success', 'Data transaksi berhasil dihapus.');
     }

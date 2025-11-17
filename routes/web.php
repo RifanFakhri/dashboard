@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DataTransaksiController;
 
 Route::get('/', function () {
     return redirect('/dashboard');
@@ -23,4 +24,10 @@ Route::get('/admins', [AdminController::class, 'index'])->name('pages.data-admin
 Route::post('/admins', [AdminController::class, 'store'])->name('admins.store');
 Route::put('/admins/{admin}', [AdminController::class, 'update'])->name('admins.update');
 Route::delete('/admins/{admin}', [AdminController::class, 'destroy'])->name('admins.destroy');  
+
+Route::resource('data-transaksi', DataTransaksiController::class)
+    ->only(['index', 'update', 'destroy'])
+    // --- PERUBAHAN: Pastikan 'transaction' cocok dengan variabel di controller ---
+    ->parameters(['data-transaksi' => 'transaction']) 
+    ->names('transaksi');
 

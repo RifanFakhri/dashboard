@@ -6,10 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Midtrans\Config;
 use Midtrans\Snap;
-use App\Models\Transaction; // <--- INI PENTING UNTUK MEMPERBAIKI ERROR 500
+use App\Models\Transaction;    // <-- Model untuk Tiket Wisata
+use App\Models\ParkirBooking; // <-- PENTING: Import model ParkirBooking
+use Illuminate\Support\Str;     // <-- PENTING: Import Str untuk cek prefix
+use Illuminate\Support\Facades\Auth;
 
 class MidtransController extends Controller
 {
+    /**
+     * TUGAS 1: MEMBUAT TRANSAKSI TIKET WISATA
+     * (Menyimpan ke tabel 'transactions')
+     */
     public function createTransaction(Request $request)
     {
         // 1. Setup Konfigurasi Midtrans
@@ -25,8 +32,8 @@ class MidtransController extends Controller
         try {
             $transaction = Transaction::create([
                 'order_id'      => $orderId,
-                'user_name'     => $request->first_name,
-                'user_email'    => $request->email,
+                'user_name'     => $request->first_name, // Asumsi dari Flutter
+                'user_email'    => $request->email,      // Asumsi dari Flutter
                 'wisata_name'   => $request->wisata_name,
                 'visit_date'    => $request->visit_date,
                 'total_tickets' => $request->quantity,
@@ -78,6 +85,11 @@ class MidtransController extends Controller
         }
     }
 
+
+    /**
+     * TUGAS 2: MENERIMA NOTIFIKASI DARI MIDTRANS (UNTUK SEMUA JENIS ORDER)
+     * Ini adalah satu-satunya URL yang Anda daftarkan di dashboard Midtrans
+     */
     public function notificationHandler(Request $request)
     {
         // Konfigurasi ulang untuk validasi notifikasi
@@ -87,52 +99,85 @@ class MidtransController extends Controller
         try {
             $notif = new \Midtrans\Notification();
 
-            $transaction = $notif->transaction_status;
+            $transactionStatus = $notif->transaction_status;
             $type = $notif->payment_type;
             $order_id = $notif->order_id;
             $fraud = $notif->fraud_status;
 
-            // 1. Cari Transaksi di Database
-            $dataTransaction = Transaction::where('order_id', $order_id)->first();
+            // --- INI ADALAH LOGIKA "PINTAR" ---
+            $booking = null; 
 
-            if (!$dataTransaction) {
-                return response()->json(['message' => 'Transaction not found'], 404);
+            if (Str::startsWith($order_id, 'PARK-')) {
+                // Ini adalah booking parkir, cari di tabel parkir_bookings
+                $booking = ParkirBooking::where('order_id', $order_id)->first();
+            } else if (Str::startsWith($order_id, 'TRX-')) {
+                // Ini adalah tiket wisata, cari di tabel transactions
+                $booking = Transaction::where('order_id', $order_id)->first();
+            }
+            // --- AKHIR LOGIKA "PINTAR" ---
+
+
+            if (!$booking) {
+                // Jika tidak ditemukan di kedua tabel
+                return response()->json(['message' => 'Transaction/Booking not found for order_id: ' . $order_id], 404);
             }
 
-            // 2. Update Status Berdasarkan Respon Midtrans
-            if ($transaction == 'capture') {
+            // Update Status di tabel yang benar (ParkirBooking atau Transaction)
+            if ($transactionStatus == 'capture') {
                 if ($type == 'credit_card') {
                     if ($fraud == 'challenge') {
-                        $dataTransaction->update(['status' => 'challenge']);
+                        $booking->update(['status' => 'challenge']);
                     } else {
-                        $dataTransaction->update(['status' => 'success']);
+                        $booking->update(['status' => 'success']);
                     }
                 }
-            } else if ($transaction == 'settlement') {
+            } else if ($transactionStatus == 'settlement') {
                 // Pembayaran Berhasil
-                $dataTransaction->update(['status' => 'success']);
+                $booking->update(['status' => 'success']);
                 
-            } else if ($transaction == 'pending') {
+            } else if ($transactionStatus == 'pending') {
                 // Menunggu Pembayaran
-                $dataTransaction->update(['status' => 'pending']);
+                $booking->update(['status' => 'pending']);
                 
-            } else if ($transaction == 'deny') {
+            } else if ($transactionStatus == 'deny') {
                 // Ditolak
-                $dataTransaction->update(['status' => 'failed']);
+                $booking->update(['status' => 'failed']);
                 
-            } else if ($transaction == 'expire') {
+            } else if ($transactionStatus == 'expire') {
                 // Kadaluarsa
-                $dataTransaction->update(['status' => 'expired']);
+                $booking->update(['status' => 'expired']);
                 
-            } else if ($transaction == 'cancel') {
+            } else if ($transactionStatus == 'cancel') {
                 // Dibatalkan
-                $dataTransaction->update(['status' => 'canceled']);
+                $booking->update(['status' => 'canceled']);
             }
 
-            return response()->json(['message' => 'Notification processed']);
+            return response()->json(['message' => 'Notification processed for ' . $order_id]);
 
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
+
+   public function getTransactions()
+    {
+        $user = Auth::user(); // Mengambil user yang sedang login
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Tidak terotentikasi'], 401);
+        }
+
+        // Cari transaksi berdasarkan nama_lengkap user
+        $transactions = Transaction::where('user_name', $user->nama_lengkap)
+            ->where('status', 'success') // Hanya tampilkan yang sukses
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $transactions
+        ]);
+    }
+
+
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User; // <-- TAMBAHKAN IMPORT User
 
 class Transaction extends Model
 {
@@ -20,4 +21,10 @@ class Transaction extends Model
         'status',
         'snap_token'
     ];
+
+   public function user()
+    {
+        // Ganti 'user_id' menjadi nama kolom Anda yang sebenarnya
+        return $this->belongsTo(User::class, 'id_user'); 
+    }
 }
