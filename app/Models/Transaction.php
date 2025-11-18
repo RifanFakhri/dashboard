@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User; // <-- TAMBAHKAN IMPORT User
+use App\Models\User; // Import ini tidak apa-apa, tapi tidak lagi digunakan
 
 class Transaction extends Model
 {
@@ -22,9 +22,12 @@ class Transaction extends Model
         'snap_token'
     ];
 
-   public function user()
-    {
-        // Ganti 'user_id' menjadi nama kolom Anda yang sebenarnya
-        return $this->belongsTo(User::class, 'id_user'); 
-    }
+   /*
+    * HAPUS ATAU KOMENTARI FUNGSI INI KARENA TIDAK ADA KOLOM 'id_user'
+    *
+    * public function user()
+    * {
+    * return $this->belongsTo(User::class, 'id_user'); 
+    * }
+    */
 }

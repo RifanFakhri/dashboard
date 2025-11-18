@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Midtrans\Config;
 use Midtrans\Snap;
-use App\Models\Transaction;    // <-- Model untuk Tiket Wisata
-use App\Models\ParkirBooking; // <-- PENTING: Import model ParkirBooking
-use Illuminate\Support\Str;     // <-- PENTING: Import Str untuk cek prefix
+use App\Models\Transaction;    
+use App\Models\ParkirBooking; 
+use Illuminate\Support\Str;    
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class MidtransController extends Controller
 {
@@ -169,14 +170,67 @@ class MidtransController extends Controller
 
         // Cari transaksi berdasarkan nama_lengkap user
         $transactions = Transaction::where('user_name', $user->nama_lengkap)
-            ->where('status', 'success') // Hanya tampilkan yang sukses
+            // ->where('status', 'success') // Hanya tampilkan yang sukses
             ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
             'success' => true,
+            'pending' => true,
             'data' => $transactions
         ]);
+    }
+
+    public function cancelBooking(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Order ID tidak ada'], 422);
+        }
+
+        $order_id = $request->input('order_id');
+        $user = auth()->user(); // <-- Ambil data user yang login
+
+        if (!$user) {
+             return response()->json(['message' => 'Tidak terotentikasi'], 401);
+        }
+
+        // Cari booking
+        $booking = null;
+        if (Str::startsWith($order_id, 'PARK-')) {
+            // Asumsi ParkirBooking punya 'user_id'
+            $booking = ParkirBooking::where('order_id', $order_id)->where('user_id', $user->id)->first();
+        
+        } else if (Str::startsWith($order_id, 'TRX-')) {
+            // ==========================================================
+            // PERUBAHAN PENTING:
+            // Cari berdasarkan 'user_name' dan 'nama_lengkap' user,
+            // karena di createTransaction Anda menyimpan 'user_name'
+            // ==========================================================
+            $booking = Transaction::where('order_id', $order_id)
+                                ->where('user_name', $user->nama_lengkap)
+                                ->first();
+        }
+
+        if (!$booking) {
+            return response()->json(['message' => 'Pesanan tidak ditemukan atau bukan milik Anda'], 404);
+        }
+
+        // Cek apakah statusnya 'pending' sebelum dibatalkan
+        if ($booking->status != 'pending') {
+             return response()->json(['message' => 'Pesanan ini tidak bisa dibatalkan (status: ' . $booking->status . ')'], 400);
+        }
+
+        // Update status di DB
+        $booking->update(['status' => 'canceled']);
+        
+        // TODO: Anda juga bisa memanggil API Midtrans untuk membatalkan transaksi di sana
+        // \Midtrans\Transaction::cancel($order_id);
+
+        return response()->json(['success' => true, 'message' => 'Pesanan telah dibatalkan']);
     }
 
 

@@ -2,45 +2,146 @@
 
 @section('content')
 
-    {{-- ... (Bagian Form Search & Alert masih sama) ... --}}
-    
-    <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Data Transaksi</h1>
-        <form action="{{ route('transaksi.index') }}" method="GET" class="w-full sm:w-auto">
-            <label for="search" class="sr-only">Cari</label>
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Data Transaksi Wisata</h1>
+
+        {{-- === BAGIAN KARTU STATISTIK (BARU) === --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            
+            {{-- KARTU 1: Total Pendapatan (Biru) --}}
+            <div class="p-4 rounded-lg shadow-md bg-blue-500 text-white flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium opacity-80">Total Pendapatan</p>
+                    <p class="text-2xl font-bold">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</p>
                 </div>
-                <input type="search" name="search" id="search"
-                       class="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                       placeholder="Cari (Order ID/User/Wisata)"
-                       value="{{ request('search') }}">
+                <div class="p-3 bg-white/20 rounded-lg">
+                    {{-- Icon Uang --}}
+                    <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                    </svg>
+                </div>
+            </div>
+
+            {{-- KARTU 2: Transaksi Sukses (Hijau) --}}
+            <div class="p-4 rounded-lg shadow-md bg-green-500 text-white flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium opacity-80">Total Terbayar</p>
+                    <p class="text-2xl font-bold">{{ $totalSukses }} <span class="text-sm font-normal">Transaksi</span></p>
+                </div>
+                <div class="p-3 bg-white/20 rounded-lg">
+                    {{-- Icon Centang --}}
+                    <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                </div>
+            </div>
+
+            {{-- KARTU 3: Menunggu Pembayaran (Merah) --}}
+            <div class="p-4 rounded-lg shadow-md bg-red-500 text-white flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium opacity-80">Belum Bayar</p>
+                    <p class="text-2xl font-bold">{{ $totalPending }} <span class="text-sm font-normal">Transaksi</span></p>
+                </div>
+                <div class="p-3 bg-white/20 rounded-lg">
+                    {{-- Icon Jam / Pending --}}
+                    <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                </div>
+            </div>
+
+            {{-- KARTU 4: Dibatalkan (Ungu) --}}
+            <div class="p-4 rounded-lg shadow-md bg-purple-500 text-white flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium opacity-80">Batal</p> {{-- Judul disesuaikan dg gambar ref --}}
+                    <p class="text-2xl font-bold">{{ $totalBatal }} <span class="text-sm font-normal">Transaksi</span></p>
+                </div>
+                <div class="p-3 bg-white/20 rounded-lg">
+                    {{-- Icon X / Shield --}}
+                    <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                </div>
+            </div>
+
+        </div>
+        {{-- === AKHIR BAGIAN KARTU STATISTIK === --}}
+        {{-- FORM FILTER & PENCARIAN --}}
+        <form action="{{ route('transaksi.index') }}" method="GET" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
+                
+                {{-- 1. Input Search (Nama User) --}}
+                <div class="lg:col-span-3">
+                    <label for="search" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cari Nama User</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                            </svg>
+                        </div>
+                        <input type="text" name="search" id="search" value="{{ request('search') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Nama User / Order ID">
+                    </div>
+                </div>
+
+                {{-- 2. Dropdown Nama Wisata (Pengganti Tahun Ajaran) --}}
+                <div class="lg:col-span-2">
+                    <label for="wisata_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nama Wisata</label>
+                    <select name="wisata_name" id="wisata_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                        <option value="">Semua Wisata</option>
+                        @foreach($wisataList as $wisata)
+                            <option value="{{ $wisata }}" {{ request('wisata_name') == $wisata ? 'selected' : '' }}>
+                                {{ $wisata }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- 3. Dropdown Status --}}
+                <div class="lg:col-span-2">
+                    <label for="status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                    <select name="status" id="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                        <option value="">Semua Status</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="success" {{ request('status') == 'success' ? 'selected' : '' }}>Sukses</option>
+                        <option value="canceled" {{ request('status') == 'canceled' ? 'selected' : '' }}>Batal</option>
+                    </select>
+                </div>
+
+                {{-- 4. Range Tanggal (Pengganti Perhalaman) --}}
+                <div class="lg:col-span-3 flex gap-2">
+                    <div class="w-full">
+                        <label for="tgl_awal" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Dari</label>
+                        <input type="date" name="tgl_awal" id="tgl_awal" value="{{ request('tgl_awal') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                    </div>
+                    <div class="w-full">
+                        <label for="tgl_akhir" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sampai</label>
+                        <input type="date" name="tgl_akhir" id="tgl_akhir" value="{{ request('tgl_akhir') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                    </div>
+                </div>
+
+                {{-- Tombol Filter & Reset --}}
+                <div class="lg:col-span-2 flex gap-2">
+                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        Filter
+                    </button>
+                    <a href="{{ route('transaksi.index') }}" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600">
+                        Reset
+                    </a>
+                </div>
             </div>
         </form>
     </div>
 
+    {{-- Alert Messages --}}
     @if(session('success'))
         <div id="success-alert" class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200" role="alert">
             <span class="font-medium">Berhasil!</span> {{ session('success') }}
         </div>
     @endif
-    @if ($errors->any())
-        <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-800 dark:text-red-200" role="alert">
-            <span class="font-medium">Gagal!</span>
-            <ul class="mt-1.5 list-disc list-inside">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
-
-    {{-- TABEL TRANSAKSI --}}
-    <div class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white dark:bg-gray-800">
+    {{-- TABEL DATA --}}
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white dark:bg-gray-800 mt-4">
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                     <th scope="col" class="px-6 py-3">No</th>
@@ -48,134 +149,97 @@
                     <th scope="col" class="px-6 py-3">Nama User</th>
                     <th scope="col" class="px-6 py-3">Nama Wisata</th>
                     <th scope="col" class="px-6 py-3">Tgl. Kunjungan</th>
-                    <th scope="col" class="px-6 py-3">Total Tiket</th>
+                    <th scope="col" class="px-6 py-3">Tiket</th>
                     <th scope="col" class="px-6 py-3">Status</th>
                     <th scope="col" class="px-6 py-3">Aksi</th>
                 </tr>
             </thead>
-
             <tbody>
                 @forelse ($transactions as $index => $transaction)
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                         <td class="px-6 py-4">{{ $transactions->firstItem() + $index }}</td>
-                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {{ $transaction->order_id }}
-                        </td>
+                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ $transaction->order_id }}</td>
+                        {{-- Karena Anda tidak pakai relasi, langsung panggil user_name --}}
+                        <td class="px-6 py-4">{{ $transaction->user_name }}</td>
+                        <td class="px-6 py-4">{{ $transaction->wisata_name }}</td>
+                        <td class="px-6 py-4">{{ \Carbon\Carbon::parse($transaction->visit_date)->isoFormat('DD MMM YYYY') }}</td>
+                        <td class="px-6 py-4">{{ $transaction->total_tickets }}</td>
                         <td class="px-6 py-4">
-                            {{ $transaction->user_name }} 
-                        </td>
-                        <td class="px-6 py-4">
-                            {{-- === PERUBAHAN DI SINI === --}}
-                            {{-- Langsung panggil kolomnya --}}
-                            {{ $transaction->wisata_name }} 
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ \Carbon\Carbon::parse($transaction->visit_date)->isoFormat('DD MMM YYYY') }}
-                        </td>
-                         <td class="px-6 py-4">
-                            {{ $transaction->total_tickets }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{-- (Badge status masih sama) --}}
                             @if($transaction->status == 'success')
-                                <span class="px-3 py-1 text-xs font-semibold rounded-lg bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Sukses</span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">Sukses</span>
                             @elseif($transaction->status == 'pending')
-                                <span class="px-3 py-1 text-xs font-semibold rounded-lg bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Pending</span>
-                            @else
-                                <span class="px-3 py-1 text-xs font-semibold rounded-lg bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Batal</span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">Pending</span>
+                             @elseif($transaction->status == 'canceled')
+                                <span class="px-2 py-1 text-xs font-semibold rounded bg-red-100 text-red-800">Batal</span>
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            {{-- (Tombol Aksi masih sama) --}}
-                            <button type="button"
-                                    data-modal-target="edit-transaksi-modal-{{ $transaction->id }}"
-                                    data-modal-toggle="edit-transaksi-modal-{{ $transaction->id }}"
-                                    class="font-medium text-blue-600 dark:text-blue-500 hover:underline">
-                                Edit
-                            </button>
-                            <form action="{{ route('transaksi.destroy', $transaction->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="font-medium text-red-600 dark:text-red-500 hover:underline ms-3">
-                                    Hapus
-                                </button>
+                            {{-- Tombol Edit Modal --}}
+                            <button data-modal-target="edit-modal-{{ $transaction->id }}" data-modal-toggle="edit-modal-{{ $transaction->id }}" class="font-medium text-blue-600 hover:underline">Edit</button>
+                            
+                            {{-- Form Hapus --}}
+                            <form action="{{ route('transaksi.destroy', $transaction->id) }}" method="POST" class="inline-block ml-2" onsubmit="return confirm('Yakin hapus?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="font-medium text-red-600 hover:underline">Hapus</button>
                             </form>
                         </td>
                     </tr>
 
-                    {{-- MODAL EDIT TRANSAKSI --}}
-                    <div id="edit-transaksi-modal-{{ $transaction->id }}" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full max-h-full">
+                    {{-- MODAL EDIT (Sertakan kode modal edit Anda di sini seperti sebelumnya) --}}
+                    {{-- Pastikan value status di select option modal edit juga pakai 'sukses', 'pending', 'batal' --}}
+                     <div id="edit-modal-{{ $transaction->id }}" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full max-h-full">
                         <div class="relative p-4 w-full max-w-lg max-h-full">
                             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
                                 <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Edit Transaksi: {{ $transaction->order_id }}</h3>
-                                    <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="edit-transaksi-modal-{{ $transaction->id }}">
+                                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Edit Transaksi</h3>
+                                    <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="edit-modal-{{ $transaction->id }}">
                                         <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
                                     </button>
                                 </div>
-                                
                                 <form action="{{ route('transaksi.update', $transaction->id) }}" method="POST">
-                                    @csrf
-                                    @method('PUT')
+                                    @csrf @method('PUT')
                                     <div class="p-4 md:p-5 grid grid-cols-2 gap-4">
-
-                                        {{-- Info statis (tidak bisa diedit) --}}
-                                        <div class="col-span-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                                            <p class="text-sm font-medium text-gray-900 dark:text-white">User: <span class="font-normal">{{ $transaction->user->name ?? 'N/A' }}</span></p>
-                                            {{-- === PERUBAHAN DI SINI === --}}
-                                            <p class="text-sm font-medium text-gray-900 dark:text-white">Wisata: <span class="font-normal">{{ $transaction->wisata_name }}</span></p>
-                                        </div>
-
-                                        {{-- Input yang bisa diedit --}}
+                                        <div class="col-span-2"><p class="text-sm">User: {{ $transaction->user_name }} <br> Wisata: {{ $transaction->wisata_name }}</p></div>
                                         <div class="col-span-1">
-                                            <label for="visit_date-edit-{{ $transaction->id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tgl. Kunjungan</label>
-                                            <input type="date" name="visit_date" id="visit_date-edit-{{ $transaction->id }}" value="{{ old('visit_date', $transaction->visit_date) }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tgl Kunjungan</label>
+                                            <input type="date" name="visit_date" value="{{ $transaction->visit_date }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                                         </div>
                                         <div class="col-span-1">
-                                            <label for="total_tickets-edit-{{ $transaction->id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Total Tiket</label>
-                                            <input type="number" name="total_tickets" id="total_tickets-edit-{{ $transaction->id }}" value="{{ old('total_tickets', $transaction->total_tickets) }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Total Tiket</label>
+                                            <input type="number" name="total_tickets" value="{{ $transaction->total_tickets }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
                                         </div>
                                         <div class="col-span-2">
-                                            <label for="status-edit-{{ $transaction->id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</slabel>
-                                            <select name="status" id="status-edit-{{ $transaction->id }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
-                                                <option value="pending" {{ old('status', $transaction->status) == 'pending' ? 'selected' : '' }}>Pending</option>
-                                                <option value="sukses" {{ old('status', $transaction->status) == 'sukses' ? 'selected' : '' }}>Sukses</option>
-                                                <option value="batal" {{ old('status', $transaction->status) == 'batal' ? 'selected' : '' }}>Batal</option>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                            <select name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5">
+                                                <option value="pending" {{ $transaction->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                                <option value="sukses" {{ $transaction->status == 'sukses' ? 'selected' : '' }}>Sukses</option>
+                                                <option value="batal" {{ $transaction->status == 'canceled' ? 'selected' : '' }}>Batal</option>
                                             </select>
                                         </div>
-
                                     </div>
-                                    {{-- Modal Footer --}}
-                                    <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
-                                        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Update Data</button>
-                                        <button type="button" data-modal-hide="edit-transaksi-modal-{{ $transaction->id }}" class="ms-3 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600">Batal</button>
+                                    <div class="flex items-center justify-end p-4 border-t rounded-b">
+                                        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5">Update</button>
+                                        <button type="button" data-modal-hide="edit-modal-{{ $transaction->id }}" class="ms-3 text-gray-500 bg-white hover:bg-gray-100 rounded-lg border border-gray-200 text-sm px-5 py-2.5">Batal</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     </div>
-
                 @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                            Tidak ada data transaksi ditemukan.
-                        </td>
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">Tidak ada data transaksi ditemukan.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    {{-- LINK PAGINATION --}}
     <div class="mt-4">
         {{ $transactions->links() }}
     </div>
 
-    {{-- ... (Script alert masih sama) ... --}}
     <script>
         const successAlert = document.getElementById("success-alert");
-        if (successAlert) {
-            setTimeout(() => successAlert.classList.add("hidden"), 3000);
-        }
+        if (successAlert) { setTimeout(() => successAlert.classList.add("hidden"), 3000); }
     </script>
 @endsection

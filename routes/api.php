@@ -27,6 +27,7 @@ Route::prefix('dolanbanyumas')->group(function () {
         // Rute GET untuk riwayat (Sekarang aman)
         Route::get('/midtrans/transactions', [MidtransController::class, 'getTransactions']);
         Route::get('/midtrans/booking-parkir', [ParkirBookingController::class, 'getAllBookings']);
+        Route::post('/midtrans/cancel-booking', [MidtransController::class, 'cancelBooking']);
 
         // Anda bisa pindahkan rute GET user ke sini juga
         Route::get('/users', function () {

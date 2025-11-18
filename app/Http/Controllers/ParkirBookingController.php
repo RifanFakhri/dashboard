@@ -135,7 +135,7 @@ class ParkirBookingController extends Controller
         $bookings = \DB::table('parkir_bookings')
             ->join('users', 'parkir_bookings.user_id', '=', 'users.id') // Join ke tabel user
             ->where('parkir_bookings.user_id', $userId) // Filter berdasarkan user ID
-            ->where('parkir_bookings.status', 'success') // Hanya tampilkan yang sukses
+            // ->where('parkir_bookings.status', 'success') // Hanya tampilkan yang sukses
             ->select(
                 'parkir_bookings.*', 
                 'users.nama_lengkap' // Ambil nama_lengkap user
@@ -145,6 +145,7 @@ class ParkirBookingController extends Controller
 
         return response()->json([
             'success' => true,
+            'pending' => true,
             'data' => $bookings
         ]);
     }

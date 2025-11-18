@@ -2,44 +2,80 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction; // Pastikan ini model Transaksi Anda
-use App\Models\User; // Pastikan ini model User Anda
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class DataTransaksiController extends Controller
 {
     /**
-     * Menampilkan halaman daftar transaksi dengan search dan pagination.
+     * Menampilkan halaman daftar transaksi dengan filter lengkap & dashboard summary.
      */
     public function index(Request $request)
     {
-        // --- PERUBAHAN: Kita HANYA load relasi 'user' ---
-        $query = Transaction::with('user'); // Asumsi relasi user() ada di model Transaction
+        // --- 1. LOGIKA KARTU STATISTIK (BARU) ---
+        
+        // Hitung Total Uang (Hanya yang sukses)
+        // Asumsi kolom harga adalah 'total_price', sesuaikan jika beda
+        $totalPendapatan = Transaction::whereIn('status', ['success', 'sukses'])->sum('total_price');
 
-        // --- Logika Search (Termasuk relasi) ---
+        // Hitung Jumlah Transaksi Sukses
+        $totalSukses = Transaction::whereIn('status', ['success', 'sukses'])->count();
+
+        // Hitung Jumlah Pending
+        $totalPending = Transaction::where('status', 'pending')->count();
+
+        // Hitung Jumlah Batal
+        $totalBatal = Transaction::whereIn('status', ['canceled', 'batal'])->count();
+
+
+        // --- 2. LOGIKA FILTER & PAGINATION ---
+        $wisataList = Transaction::select('wisata_name')
+                        ->distinct()
+                        ->pluck('wisata_name');
+
+        $query = Transaction::query();
+
+        // Filter Search
         if ($request->filled('search')) {
             $search = $request->input('search');
-            
             $query->where(function($q) use ($search) {
-                // Cari di tabel transactions (order_id DAN wisata_name)
-                $q->where('order_id', 'like', '%' . $search . '%')
-                  ->orWhere('wisata_name', 'like', '%' . $search . '%'); // <-- PERUBAHAN DI SINI
-                  
-                // Cari di relasi user (user_name)
-                $q->orWhereHas('user', function($userQuery) use ($search) {
-                    // SESUAIKAN: 'name' dengan kolom nama di tabel users
-                    $userQuery->where('name', 'like', '%' . $search . '%');
-                });
+                $q->where('user_name', 'like', '%' . $search . '%')
+                  ->orWhere('order_id', 'like', '%' . $search . '%');
             });
         }
 
-        // --- Pagination ---
+        // Filter Wisata
+        if ($request->filled('wisata_name')) {
+            $query->where('wisata_name', $request->input('wisata_name'));
+        }
+
+        // Filter Status
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Filter Tanggal
+        if ($request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $query->whereBetween('visit_date', [
+                $request->input('tgl_awal'), 
+                $request->input('tgl_akhir')
+            ]);
+        }
+
         $transactions = $query->orderBy('created_at', 'desc')
                               ->paginate(6)
-                              ->withQueryString(); 
+                              ->withQueryString();
 
-        return view('pages.data-transaksi', compact('transactions'));
+        // --- 3. KIRIM SEMUA DATA KE VIEW ---
+        return view('pages.data-transaksi', compact(
+            'transactions', 
+            'wisataList',
+            'totalPendapatan',
+            'totalSukses',
+            'totalPending',
+            'totalBatal'
+        ));
     }
 
     /**
@@ -47,16 +83,14 @@ class DataTransaksiController extends Controller
      */
     public function update(Request $request, Transaction $transaction) 
     {
-        // Validasi ini masih sama, karena 'wisata_name' mungkin tidak untuk diedit
         $validatedData = $request->validate([
             'visit_date' => 'required|date',
             'total_tickets' => 'required|integer|min:1',
             'status' => [
-                'required',
-                Rule::in(['pending', 'sukses', 'batal']), 
+                'required', 
+                // Izinkan variasi status Inggris & Indo
+                Rule::in(['pending', 'sukses', 'success', 'batal', 'canceled'])
             ],
-            // Jika wisata_name juga BISA diedit, tambahkan di sini:
-            // 'wisata_name' => 'required|string|max:255',
         ]);
 
         $transaction->update($validatedData);
