@@ -6,14 +6,20 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DataTransaksiController;
 use App\Http\Controllers\DataParkirController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LoginAdminController;
 
 Route::get('/', function () {
-    return redirect('/dashboard');
+    return redirect('/login');
 });
 
-Route::get('/dashboard', function () {
-    return view('pages.home_screen');
-})->name('dashboard');
+// Tampilkan Form Login Admin
+Route::get('/login', [LoginAdminController::class, 'showLoginForm'])->name('admin.show_login');
+
+// Proses Submit Login Admin
+Route::post('/login', [LoginAdminController::class, 'login'])->name('admin.login');
+
+// Proses Logout
+Route::post('/logout', [LoginAdminController::class, 'logout'])->name('admin.logout');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('pages.dashboard');
 
