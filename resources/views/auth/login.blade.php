@@ -17,7 +17,6 @@
 
 <div class="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 bg-gray-100">
   <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-    <img src="https://placehold.co/100x40/4f46e5/ffffff?text=ADMIN" alt="Company Logo" class="mx-auto h-10 w-auto rounded-md" />
     <h2 class="mt-8 text-center text-3xl font-bold tracking-tight text-gray-900">Masuk ke Akun Admin</h2>
   </div>
 
