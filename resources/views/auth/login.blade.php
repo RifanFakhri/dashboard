@@ -16,12 +16,11 @@
 <body>
 
 <div class="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 bg-gray-100">
-  <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-    <h2 class="mt-8 text-center text-3xl font-bold tracking-tight text-gray-900">Masuk ke Akun Admin</h2>
-  </div>
 
   <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm bg-white p-8 rounded-xl shadow-lg">
-    
+   <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+    <h2 class="mt-8 text-center text-3xl font-bold tracking-tight text-gray-900">Masuk ke Akun Admin</h2>
+  </div>
     {{-- Display Validation Errors --}}
     @if ($errors->any())
         <div class="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
@@ -62,11 +61,6 @@
       </div>
     </form>
 
-    <p class="mt-8 text-center text-sm text-gray-500">
-      Bukan Admin?
-      {{-- Link Register diubah ke Login Biasa jika ada --}}
-      <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Kembali ke Halaman Utama</a>
-    </p>
   </div>
 </div>
 
